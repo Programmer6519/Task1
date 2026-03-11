@@ -46,8 +46,6 @@ export const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Email or password is incorrect");
   }
   const isPasswordValid = await isPasswordCorrect(user[0].password, password);
-  console.log(user[0].password);
-  console.log(isPasswordValid);
   if (!isPasswordValid) {
     throw new ApiError(401, "Email or password is incorrect");
   }
@@ -56,7 +54,6 @@ export const loginUser = asyncHandler(async (req, res) => {
   user[0].refreshToken = newRefreshToken;
 
   await user[0].save({ validateBeforeSave: false });
-  console.log(user);
   res
     .status(200)
     .cookie("accessToken", newAccessToken, options)

@@ -1,5 +1,5 @@
 import { Schema, mongoose } from "mongoose";
-import { SubTodo } from "./subTodo_models";
+import { SubTodo } from "./subTodo_models.js";
 
 const mainTodoSchema = new Schema(
   {
@@ -11,7 +11,7 @@ const mainTodoSchema = new Schema(
       type: String,
       required: true,
     },
-    createdBy: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
@@ -19,9 +19,8 @@ const mainTodoSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    todos: [SubTodo],
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 export const MainTodo = mongoose.model("MainTodo", mainTodoSchema);

@@ -21,7 +21,6 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
     if (user.length < 1) {
       throw new ApiError(401, "Invalid Access Token");
     }
-    console.log(user);
     const authUser = await user[0].toObject();
 
     delete authUser.password;
