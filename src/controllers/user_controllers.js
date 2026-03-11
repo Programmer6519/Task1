@@ -12,6 +12,10 @@ const options = {
   secure: true,
 };
 
+const getHashPassword = async function (password) {
+  return await bcrypt.hash(password, 10);
+};
+
 export const signupUser = asyncHandler(async (req, res) => {
   const { email, password, name } = req.body;
   if (!email || !password) {
@@ -20,15 +24,16 @@ export const signupUser = asyncHandler(async (req, res) => {
   if (!name) {
     throw new ApiError(400, "name is required");
   }
-  const searchUser = await User.find({ email: email }); //set
+  const userExists = await User.find({ email: email }); //set
 
-  if (searchUser.length > 0) {
+  if (!userExists[0]) {
     throw new ApiError(400, "User already Exists");
   }
+
   const newUser = await User.create({
     email: email,
     name: name,
-    password: password,
+    password: getHashPassword(password),
   });
   const resUser = newUser.toObject();
   delete resUser.password;
@@ -64,14 +69,9 @@ export const loginUser = asyncHandler(async (req, res) => {
 });
 
 export const logoutUser = asyncHandler(async (req, res) => {
-  // console.log(refreshToken._id);
-
-  const user = req.user;
-  const registeredUser = await User.find({ _id: user._id });
-  // console.log(registeredUser[0]);
-  registeredUser[0].refreshToken = "";
-  await registeredUser[0].save({ validateBeforeSave: false });
-
+  const user = await User.find({ _id: req.decodeToken._id });
+  user[0].refreshToken = "";
+  user[0].save({ validateBeforeSave: false });
   res
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)

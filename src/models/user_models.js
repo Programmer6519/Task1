@@ -25,16 +25,8 @@ const userSchema = new Schema(
       type: String,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
-
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next;
-  }
-  this.password = await bcrypt.hash(this.password, 10);
-  return next;
-});
 
 userSchema.methods.generateAccessToken = async function () {
   const token = jwt.sign(
@@ -44,7 +36,7 @@ userSchema.methods.generateAccessToken = async function () {
     process.env.ACCESS_TOKEN_SECRET,
     {
       expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
-    },
+    }
   );
   return token;
 };
@@ -57,7 +49,7 @@ userSchema.methods.generateRefreshToken = async function () {
     process.env.REFRESH_TOKEN_SECRET,
     {
       expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
-    },
+    }
   );
   return token;
 };

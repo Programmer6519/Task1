@@ -16,8 +16,9 @@ const mainTodoSchema = new Schema(
       ref: "User",
     },
     status: {
-      type: Boolean,
-      default: false,
+      type: String,
+      Enum: ["Completed", "Pending", "InProgress"],
+      default: "Pending",
     },
   },
   { timestamps: true }

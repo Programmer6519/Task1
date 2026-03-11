@@ -10,66 +10,67 @@ export const createTodo = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
-  if (!req.cookies.accessToken) {
-    throw new ApiError(400, "User login required");
-  }
-
-  const decodeToken = jwt.verify(
-    req.cookies.accessToken,
-    process.env.ACCESS_TOKEN_SECRET
-  );
-  const user = await User.find({ _id: decodeToken._id });
-  if (!user[0]) {
-    throw new ApiError(401, "Invalid token");
-  }
   const todo = await MainTodo.create({
     title: title,
     content: content,
-    userId: decodeToken._id,
+    userId: req.decodeToken._id,
   });
 
   res.json({ message: "todo created successfully", todo }).status(200);
 });
 
 export const getTodo = asyncHandler(async (req, res) => {
-  if (!req.cookies.accessToken) {
-    throw new ApiError(400, "Unauthorized request");
-  }
+  const { maintodoid } = req.body;
+  const totalMaintodosCount = await MainTodo.countDocuments({});
+  const completedMaintodos = await MainTodo.countDocuments({
+    status: "Completed",
+  });
+  const pendingMaintodos = await MainTodo.countDocuments({ status: "Pending" });
+  const inProgressMaintodos = await MainTodo.countDocuments({
+    status: "InProgress",
+  });
+  if (maintodoid) {
+    const todo = await MainTodo.find({ _id: maintodoid });
+    if (!todo[0]) {
+      throw new ApiError(400, "Invalid id");
+    }
+    res
+      .json({
+        todo,
+        totalMaintodosCount,
+        completedMaintodos,
+        pendingMaintodos,
+        inProgressMaintodos,
+      })
+      .status(200);
+  } else {
+    const todoList = await MainTodo.find({ userId: req.decodeToken._id });
 
-  const decodeToken = jwt.verify(
-    req.cookies.accessToken,
-    process.env.ACCESS_TOKEN_SECRET
-  );
-  const todoList = await MainTodo.find({ userId: decodeToken._id });
-
-  if (!todoList[0]) {
-    throw new ApiError(400, "There are no todos");
+    if (!todoList[0]) {
+      throw new ApiError(400, "There are no todos");
+    }
+    res
+      .json({
+        todoList,
+        totalMaintodosCount,
+        completedMaintodos,
+        pendingMaintodos,
+        inProgressMaintodos,
+      })
+      .status(200);
   }
-  res.json({ todoList }).status(200);
 });
 
 export const updateTodo = asyncHandler(async (req, res) => {
-  const { title, content, status } = req.body;
+  const { title, content, status, todoid } = req.body;
 
-  if (!req.cookies.accessToken) {
-    throw new ApiError(400, "Unauthorized request");
-  }
-
-  const decodeToken = jwt.verify(
-    req.cookies.accessToken,
-    process.env.ACCESS_TOKEN_SECRET
-  );
-  if (!req.query.todoid) {
+  if (!todoid) {
     throw new ApiError(400, "Todo Id is required");
-  }
-  const user = await User.find({ _id: decodeToken._id });
-  if (!user[0]) {
-    throw new ApiError(401, "Invalid token");
   }
 
   const todo = await MainTodo.find({
-    _id: req.query.todoid,
-    userId: decodeToken._id,
+    _id: todoid,
+    userId: req.decodeToken._id,
   });
   if (!todo[0]) {
     throw new ApiError(401, "Id is invalid");
@@ -83,26 +84,16 @@ export const updateTodo = asyncHandler(async (req, res) => {
 });
 
 export const deleteTodo = asyncHandler(async (req, res) => {
-  if (!req.cookies.accessToken) {
-    throw new ApiError(400, "User login required");
-  }
+  const { todoid } = req.body;
 
-  const decodeToken = jwt.verify(
-    req.cookies.accessToken,
-    process.env.ACCESS_TOKEN_SECRET
-  );
-  const user = await User.find({ _id: decodeToken._id });
   const todo = await MainTodo.find({
-    _id: req.query.todoid,
-    userId: user[0]._id,
+    _id: todoid,
+    userId: req.decodeToken._id,
   });
   if (!todo[0]) {
     throw new ApiError(404, "Not Found");
   }
-  if (!user[0]) {
-    throw new ApiError(401, "Invalid token");
-  }
 
-  await MainTodo.deleteOne({ _id: req.query.todoid });
+  await MainTodo.deleteOne({ _id: todoid });
   res.status(200).json({ message: "todo deleted successfully" });
 });

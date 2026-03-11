@@ -6,12 +6,12 @@ import {
 } from "../controllers/user_controllers.js";
 import { verifyJWT } from "../middlewares/auth_middleware.js";
 
-const router = Router();
+const userRouter = Router();
 
-router.post("/signup", signupUser);
-router.post("/login", loginUser);
-router.route("/logout").post(verifyJWT, logoutUser);
+userRouter.post("/signup", signupUser);
+userRouter.post("/login", loginUser);
+userRouter.route("/logout").post(verifyJWT, logoutUser);
 
 // router.post("/logout", verifyJWT, logoutUser);
 
-export default router;
+export { userRouter };

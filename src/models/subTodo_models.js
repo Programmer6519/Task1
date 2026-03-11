@@ -11,10 +11,11 @@ const subTodoSchema = new Schema(
       required: true,
     },
     status: {
-      type: Boolean,
-      default: false,
+      type: String,
+      Enum: ["Completed", "Pending", "InProgress"],
+      default: "Pending",
     },
-    parentTodo: {
+    maintodoid: {
       type: Schema.Types.ObjectId,
       ref: "MainTodo",
     },
