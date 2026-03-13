@@ -1,92 +1,102 @@
+import { Query } from "mongoose";
+import { MainTodo } from "../models/mainTodo_models.js";
 import { SubTodo } from "../models/subTodo_models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const createSubTodo = asyncHandler(async (req, res) => {
-  const { title, content, maintodoid } = req.body;
-  if (!title || !content || !maintodoid) {
+  const { title, content, mainTodoId, status } = req.body;
+  if (!title || !content) {
     throw new ApiError(400, "All fields are required");
   }
 
   const subTodo = await SubTodo.create({
     title,
     content,
-    maintodoid,
+    status,
+    mainTodoId,
   });
 
-  res.status(200).json({ message: "subTodo created successfully", subTodo });
+  return res
+    .status(200)
+    .json({ success: true, message: "subTodo created successfully", subTodo });
 });
 
 export const getSubTodo = asyncHandler(async (req, res) => {
-  const { maintodoid, subtodoid } = req.body;
-  const totalSubtodosCount = await SubTodo.countDocuments({});
+  const { mainTodoId, subTodoId, status } = req.body;
+
+  const totalSubtodosCount = await SubTodo.countDocuments({ mainTodoId });
   const completedSubtodos = await SubTodo.countDocuments({
-    status: "Completed",
+    status: "completed",
+    mainTodoId,
   });
-  const pendingSubtodos = await SubTodo.countDocuments({ status: "Pending" });
+  const pendingSubtodos = await SubTodo.countDocuments({
+    status: "pending",
+    mainTodoId,
+  });
   const inProgressSubtodos = await SubTodo.countDocuments({
-    status: "InProgress",
+    status: "inProgress",
+    mainTodoId,
   });
 
-  if (maintodoid && subtodoid) {
-    throw new ApiError(400, "Only one id is required");
+  const query = { mainTodoId };
+  if (subTodoId) {
+    query._id = subTodoId;
+  }
+  if (status) {
+    query.status = status;
   }
 
-  if (maintodoid) {
-    const subTodos = await SubTodo.find({ maintodoid });
-    if (!subTodos[0]) {
-      throw new ApiError(400, "Invalid maintodo id");
-    }
-    res.status(200).json({ subTodos });
-  } else if (subtodoid) {
-    const subTodo = await SubTodo.find({ _id: subtodoid });
+  const subTodos = await SubTodo.find(query);
 
-    if (!subTodo) {
-      throw new ApiError(400, "Invalid subtodo id");
-    }
-    res.status(200).json({
-      subTodo,
-      totalSubtodosCount,
-      completedSubtodos,
-      pendingSubtodos,
-      inProgressSubtodos,
-    });
-  } else {
-    throw new ApiError(400, "id is required");
-  }
+  return res.status(200).json({
+    success: true,
+    subTodos,
+    totalSubtodosCount,
+    completedSubtodos,
+    pendingSubtodos,
+    inProgressSubtodos,
+  });
 });
 
 export const updateSubTodo = asyncHandler(async (req, res) => {
-  const { title, content, status, subtodoid } = req.body;
+  const { title, content, status, subTodoId, mainTodoId } = req.body;
 
-  if (!subtodoid) {
+  if (!subTodoId) {
     throw new ApiError(400, "subTodo Id is required");
   }
 
   const subTodo = await SubTodo.find({
-    _id: subtodoid,
+    _id: subTodoId,
+    mainTodoId,
   });
-  if (!subTodo[0]) {
-    throw new ApiError(401, "Id is invalid");
-  }
 
-  subTodo[0].content = content;
-  subTodo[0].title = title;
-  subTodo[0].status = status;
+  subTodo[0].content = content ? content : subTodo[0].content;
+  subTodo[0].title = title && title;
+  subTodo[0].status = status ? status : subTodo[0].status;
   await subTodo[0].save();
-  res.status(200).json({ subTodo });
+  return res.status(200).json({
+    success: true,
+    message: "SubTodo is updated successfully",
+    subTodo,
+  });
 });
 
 export const deleteSubTodo = asyncHandler(async (req, res) => {
-  const { subtodoid } = req.body;
-
-  const subTodo = await SubTodo.find({
-    _id: subtodoid,
-  });
-  if (!subTodo[0]) {
-    throw new ApiError(404, "Not Found");
+  const { subTodoId } = req.body;
+  if (!subTodoId) {
+    throw new ApiError(400, "SubTodo Id is required");
   }
 
-  await SubTodo.deleteOne({ _id: subtodoid });
-  res.status(200).json({ message: "subtodo deleted successfully" });
+  const subTodo = await SubTodo.find({ _id: subTodoId });
+  console.log(subTodo);
+
+  if (!subTodo[0]) {
+    throw new ApiError(400, "Invalid SubTodo Id");
+  }
+
+  await subTodo[0].deleteOne();
+  return res
+    .status(200)
+    .json({ success: true, message: "SubTodo deleted successfully" });
 });

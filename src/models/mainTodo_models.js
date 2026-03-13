@@ -17,8 +17,8 @@ const mainTodoSchema = new Schema(
     },
     status: {
       type: String,
-      Enum: ["Completed", "Pending", "InProgress"],
-      default: "Pending",
+      Enum: ["completed", "pending", "inProgress"],
+      default: "pending",
     },
   },
   { timestamps: true }

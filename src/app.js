@@ -4,7 +4,6 @@ import { subtodoRouter } from "./routes/subtodo_routes.js";
 import { userRouter } from "./routes/user_routes.js";
 import { todoRouter } from "./routes/todo_routes.js";
 import express from "express";
-import cookieParser from "cookie-parser";
 import cors from "cors";
 
 const app = express();
@@ -13,7 +12,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("/public/temp"));
 app.use(cors());
-app.use(cookieParser());
 
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/todo", verifyJWT, todoRouter);

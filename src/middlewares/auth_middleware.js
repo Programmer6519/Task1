@@ -5,17 +5,17 @@ import jwt from "jsonwebtoken";
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
-    if (!req.cookies.accessToken) {
-      throw new ApiError(401, "Unauthorized Request");
-    }
+    const token = req.header("Authorization");
 
-    const token =
-      req.cookies.accessToken ||
-      req.header("Authorization").replace("Bearer ", "");
     if (!token) {
       throw new ApiError(401, "Unauthorized Access Token");
     }
+
     const decodeToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const currentTime = Date.now() / 1000;
+    if (decodeToken.exp < currentTime) {
+      throw new ApiError(400, "Access Token is expired");
+    }
     req.decodeToken = decodeToken;
     next();
   } catch (error) {
